@@ -84,7 +84,20 @@ def get_css_manifest_files(filename):
 
 
 def get_unloaded_chunks(files, loaded_chunks):
-    filtered_files = [f for f in files if f not in loaded_chunks]
+
+    def external_static_url_contact(file):
+        return "%s%s" % (_external_url, file)
+
+    def inner_static_url(file):
+        return file
+    _external_url = conf.get("EXTERNAL_STATIC_URL")
+    if _external_url:
+        url_contact = external_static_url_contact
+    else:
+        url_contact = inner_static_url
+
+    filtered_files = [url_contact(f) for f in files if f not in loaded_chunks]
+
     for f in filtered_files:
         loaded_chunks.add(f)
     return filtered_files
@@ -96,6 +109,7 @@ parse_manifest_json()
 @app.context_processor
 def get_manifest():
     return dict(
+        external_static_url=conf.get("EXTERNAL_STATIC_URL"),
         loaded_chunks=set(),
         get_unloaded_chunks=get_unloaded_chunks,
         js_manifest=get_js_manifest_files,
